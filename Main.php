@@ -157,4 +157,65 @@ function DisplayAllBook()
 
 }
 
+function DisplayBook()
+{
+    print_r("Entrez l'identifiant du livre : \n");
+    $id = fgets(STDIN);
+
+    $retrieve_data = file_get_contents(BIBLIOTHEQUE);
+
+    $decoded = json_decode($retrieve_data,true);
+
+    $found = false;
+    
+
+    foreach ($decoded as $key => $value) {
+        if ($value['id'] == trim($id)) {
+            echo "Titre: " . $value['titre'] . "\n";
+            echo "Description: " . $value['desc'] . "\n";
+            echo "Disponible: " . ($value['stock'] ? "Oui" : "Non") . "\n";
+            $found = true;
+        }
+    }
+
+    if (! $found) {
+        echo "Aucun livre trouvé\n";
+    }
+
+    system('cls');
+
+    Menu(1);
+}
+
+function sortBooks()
+{
+    
+}
+
+function merge(&$array, $left, $middle, $right)
+{
+    $leftLength = $middle - $left +1;
+    $rightLength = $right - $middle;
+
+    $leftArray = array_slice($array, $left, $leftLength);
+    $rightArray = array_slice($array, $middle+1, $rightLength);
+
+
+    $i = 0;
+    $j = 0;
+    $k = $left;
+}
+
+function mergeSort($array, $left, $right)
+{
+    if ($left < $right) {
+        $middle = $left + (int)(($right + $left) / 2);
+
+        mergeSort($array, $left, $middle);
+        mergeSort($array, $middle+1, $right);
+
+        merge($array, $left, $middle, $right);
+    }
+}
+
 Menu();
