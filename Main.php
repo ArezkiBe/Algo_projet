@@ -64,7 +64,8 @@ function Menu($mod = 0): void
     print_r("[2] : Modifier un Livre \n");
     print_r("[3] : Supprimer un Livre \n");
     print_r("[4] : Afficher tout les livres de la bibliothèque \n");
-    print_r("[5] : Afficher un Livre \n\n");
+    print_r("[5] : Afficher un Livre \n");
+    print_r("[X] : Quitter \n\n");
 
     $choice = fgets(STDIN);
 
@@ -79,6 +80,8 @@ function Menu($mod = 0): void
         DisplayAllBook();
     }elseif ($choice == 5) {
         # code...
+    }elseif ($choice == "x" || $choice == "X") {
+        exit;
     }
 }
 
@@ -96,7 +99,6 @@ function CreateBook(): void
     $desc = fgets(STDIN);
     $stock = 0;
     SelectStock($stock);
-    var_dump($stock);
  
 
     $book = [
@@ -142,15 +144,15 @@ function SelectStock(&$stock)
 
 function DisplayAllBook()
 {
-
     $retrieve_data = file_get_contents(BIBLIOTHEQUE);
 
     $decoded = json_decode($retrieve_data,true);
-
+    print_r("-------------------------------------\n");
     print_r("Voici les livres de la bibliothèque : \n");
-    var_dump($decoded);
+    print_r("-------------------------------------\n");
     foreach ($decoded as $key => $value) {
-        print_r("$key : ".$value["titre"]."\n");
+        print_r("$key : ".$value["titre"] ." (id : ".$value["id"].")\n");
+        print_r("-------------------------------------\n");
     }
 
     Menu(1);
