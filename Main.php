@@ -1,7 +1,10 @@
 <?php
 
+## constante permettant l'accès au fichier source ##
 define("BIBLIOTHEQUE","Bibliotheque.json");
 
+## Fonction principale permetant d'afficher le menu et de gérer les input utilisateur ##
+## paramètre mod a 0 par défaut permet de gérer l'affichage ou non de l'entete de démarage ##
 function Menu($mod = 0): void
 {
     if ($mod == 0) {
@@ -19,8 +22,10 @@ function Menu($mod = 0): void
     print_r("[5] : Afficher un Livre \n");
     print_r("[X] : Quitter \n\n");
 
+    ## Récupération de l'input utilisateur ##
     $choice = fgets(STDIN);
 
+    ## Gestion et lancement des différents scripts a partir des inputs  ##
     if ($choice == 1) 
     {
        CreateBook();
@@ -37,19 +42,21 @@ function Menu($mod = 0): void
     }
 }
 
-
+## Fonction permetant de Créer un livre et l'ajouter au fichier bibliothèque  ##
 function CreateBook(): void
 {
     print_r("Début de la création du Livre\n");
 
-
+    ## Génération de l'id unique du livre ##
     $id = uniqid("book_", true);
 
+    ## Récupération des différents paramètres du livre##
     print_r("Entrez le nom du livre : \n");
     $name = fgets(STDIN);
     print_r("Entrez la description du livre : \n");
     $desc = fgets(STDIN);
     $stock = 0;
+    ## Appel de la fonction stock permetant la gestion de l'affichage du menu des stock##
     SelectStock($stock);
  
 
@@ -61,7 +68,7 @@ function CreateBook(): void
     ];
 
 
-
+    ## Récupération des données de la bibliothèque et enregistrement du nouveau livre ##
     $file = json_decode(file_get_contents(BIBLIOTHEQUE),true);
     $file[] = $book;
     file_put_contents(BIBLIOTHEQUE,json_encode($file));
@@ -72,6 +79,7 @@ function CreateBook(): void
 
 }
 
+## Fonction permetant de gerer le paramètre stock d'un livre avec son menu ##
 function SelectStock(&$stock)
 {
     print_r("Le livre est-il en stock : \n");
@@ -94,8 +102,10 @@ function SelectStock(&$stock)
 
 }
 
+## Fonction permettant d'afficher tout les livres de la bibliothèque ##
 function DisplayAllBook($menu = 0)
 {
+    ## Récupération des données de la bibiliothèque  ##
     $retrieve_data = file_get_contents(BIBLIOTHEQUE);
 
     $decoded = json_decode($retrieve_data,true);
@@ -105,6 +115,7 @@ function DisplayAllBook($menu = 0)
         print_r("-------------------------------------\n");
     }
 
+    ## Boucle sur chacun des livres en affichant leurs parametre id et titre ##
     foreach ($decoded as $key => $value) {
         print_r("$key : ".$value["titre"] ." (id : ".$value["id"].")\n");
         print_r("-------------------------------------\n");
@@ -117,8 +128,10 @@ function DisplayAllBook($menu = 0)
 
 }
 
+## Fonction permettant de selectionner et modifier un livre ##
 function ModifyBook()
 {
+    ## Récupération des valeurs de la bibliotheque  ##
     $retrieve_data = file_get_contents(BIBLIOTHEQUE);
 
     $decoded = json_decode($retrieve_data,true);
@@ -128,21 +141,26 @@ function ModifyBook()
     print_r("-------------------------------------\n");
     DisplayAllBook(1);
 
+    ## Récupération de l'input utilisateur ##
     $choice = trim(fgets(STDIN));
 
+    ## Vérification de l'éistence du livre  ##
     if (array_key_exists($choice,$decoded)) 
     {
         foreach ($decoded[$choice] as $key => $value) 
         {
+            ## Génération d'un nouvel id ##
             if ($key == "id") 
             {
                 $param = uniqid("book_", true);
 
-            }elseif($key == "stock") {
+            }
+            elseif($key == "stock") ## modification du stock ##
+            {
                 $param = 0;
                 SelectStock($param);
                 
-            }else {
+            }else { ## Boucle sur les autres paramètres ##
                 print_r("Entrez le nouveau paramètre (".$key."): ");
                 $param = trim(fgets(STDIN));
             }
@@ -150,7 +168,7 @@ function ModifyBook()
             $decoded[$choice][$key] = $param;
         }
 
-
+        ## Enregistrement dans la bibliothèque ##
         file_put_contents(BIBLIOTHEQUE,json_encode($decoded));
 
         print_r("Le livre a bien été créer !! \n");
@@ -164,8 +182,10 @@ function ModifyBook()
 
 }
 
+## Fonction permettant de supprimer un livre de la bibliothèque##
 function DeleteBook()
 {
+    ## Récupération des données de la bibliothèque ##
     $retrieve_data = file_get_contents(BIBLIOTHEQUE);
 
     $decoded = json_decode($retrieve_data,true);
@@ -176,6 +196,8 @@ function DeleteBook()
     DisplayAllBook(1);
 
     $choice = trim(fgets(STDIN));
+
+    ## Vérification de l'existence du livre et suppression ##
     if (array_key_exists($choice,$decoded)) 
     {
         unset($decoded[$choice]);
