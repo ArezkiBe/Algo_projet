@@ -191,7 +191,13 @@ function DisplayBook()
 
 function sortBooks()
 {
-    
+    $retrieve_data = file_get_contents(BIBLIOTHEQUE);
+
+    $decoded = json_decode($retrieve_data,true);
+
+    mergeSort($decoded, 0, count($decoded) -1);
+
+    print_r($decoded);
 }
 
 function merge(&$array, $left, $middle, $right)
@@ -206,12 +212,36 @@ function merge(&$array, $left, $middle, $right)
     $i = 0;
     $j = 0;
     $k = $left;
+
+    while($i < $leftLength && $j < $rightLength) {
+        if (strcmp($leftArray[$i]['titre'], $rightArray[$j]['titre']) <= 0) {
+            $array[$k] = $leftArray[$i];
+            $i++;
+        } else {
+            $array[$k] = $rightArray[$j];
+            $j++;
+        }
+        $k++;
+    }
+
+    while ($i < $leftLength) {
+        $array[$k] = $leftArray[$i];
+        $i++;
+        $k++;
+    }
+
+    while ($j < $leftLength) {
+        $array[$k] = $rightArray[$j];
+        $j++;
+        $k++;
+    }
 }
 
 function mergeSort($array, $left, $right)
 {
     if ($left < $right) {
         $middle = $left + (int)(($right + $left) / 2);
+        //echo $middle;
 
         mergeSort($array, $left, $middle);
         mergeSort($array, $middle+1, $right);
