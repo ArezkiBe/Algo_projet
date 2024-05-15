@@ -2,54 +2,6 @@
 
 define("BIBLIOTHEQUE","Bibliotheque.json");
 
-
-// $book = array(
-//     "test" => [
-//         "name" => "un livre",
-//         "author" => "un autheur",
-//         "theme" => "un theme"
-//     ]
-
-// );
-
-// $json_data = json_encode($book, JSON_PRETTY_PRINT);
-
-// file_put_contents($filename, $json_data);
-
-
-// $retrieve_data = file_get_contents($filename);
-
-// $decoded = json_decode($retrieve_data,true);
-// print_r($retrieve_data);
-
-// print_r($decoded);
-
-// $book2 = array(
-//         "name" => "un livre",
-//         "author" => "un autheur",
-//         "theme" => "un theme"
-
-
-// );
-
-
-
-// print_r($decoded);
-
-
-// foreach ($decoded as $book => $value) 
-// {
-//     print_r("le livre ".$book + 1 ." : \n");
-//     foreach ($value as $key => $value) 
-//     {
-//         print_r(" $key :  $value\n");
-
-//     }
-//     print_r("-------------------------\n");
-// }
-
-
-
 function Menu($mod = 0): void
 {
     if ($mod == 0) {
@@ -73,9 +25,9 @@ function Menu($mod = 0): void
     {
        CreateBook();
     }elseif ($choice == 2) {
-        # code...
+        ModifyBook();
     }elseif ($choice == 3) {
-        # code...
+        DeleteBook();
     }elseif ($choice == 4) {
         DisplayAllBook();
     }elseif ($choice == 5) {
@@ -142,20 +94,24 @@ function SelectStock(&$stock)
 
 }
 
-function DisplayAllBook()
+function DisplayAllBook($menu = 0)
 {
     $retrieve_data = file_get_contents(BIBLIOTHEQUE);
 
     $decoded = json_decode($retrieve_data,true);
-    print_r("-------------------------------------\n");
-    print_r("Voici les livres de la bibliothèque : \n");
-    print_r("-------------------------------------\n");
+    if ($menu == 0 ) {
+        print_r("-------------------------------------\n");
+        print_r("Voici les livres de la bibliothèque : \n");
+        print_r("-------------------------------------\n");
+    }
+
     foreach ($decoded as $key => $value) {
         print_r("$key : ".$value["titre"] ." (id : ".$value["id"].")\n");
         print_r("-------------------------------------\n");
     }
 
-    Menu(1);
+    if ($menu == 0) {
+        Menu(1);
 
 }
 
@@ -250,4 +206,76 @@ function mergeSort($array, $left, $right)
     }
 }
 
+}
+
+function ModifyBook()
+{
+    $retrieve_data = file_get_contents(BIBLIOTHEQUE);
+
+    $decoded = json_decode($retrieve_data,true);
+
+    print_r("-------------------------------------\n");
+    print_r("Quel livre voulez vous modifier ? : \n");
+    print_r("-------------------------------------\n");
+    DisplayAllBook(1);
+
+    $choice = trim(fgets(STDIN));
+
+    if (array_key_exists($choice,$decoded)) 
+    {
+        foreach ($decoded[$choice] as $key => $value) 
+        {
+            if ($key == "id") 
+            {
+                $param = uniqid("book_", true);
+
+            }elseif($key == "stock") {
+                $param = 0;
+                SelectStock($param);
+                
+            }else {
+                print_r("Entrez le nouveau paramètre (".$key."): ");
+                $param = trim(fgets(STDIN));
+            }
+            
+            $decoded[$choice][$key] = $param;
+        }
+
+
+        file_put_contents(BIBLIOTHEQUE,json_encode($decoded));
+
+        print_r("Le livre a bien été créer !! \n");
+
+        Menu(1);
+
+    }else{
+        print_r("Aucun Livre correspondant !");
+    }
+
+
+}
+
+function DeleteBook()
+{
+    $retrieve_data = file_get_contents(BIBLIOTHEQUE);
+
+    $decoded = json_decode($retrieve_data,true);
+
+    print_r("-------------------------------------\n");
+    print_r("Quel livre voulez vous Supprimer ? : \n");
+    print_r("-------------------------------------\n");
+    DisplayAllBook(1);
+
+    $choice = trim(fgets(STDIN));
+    if (array_key_exists($choice,$decoded)) 
+    {
+        unset($decoded[$choice]);
+        print_r("Livre supprimer avec succès !");
+        Menu(1);
+
+    }else{
+        print_r("Aucun Livre correspondant !");
+        DeleteBook();
+    }
+}
 Menu();
