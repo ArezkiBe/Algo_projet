@@ -1,8 +1,11 @@
 <?php
 
+// Définitions des constantes pour les fichiers JSON et de l'historique
 define("BIBLIOTHEQUE", "Bibliotheque.json");
 define("HISTORIQUE", "Historique.log");
 
+
+// Classe représentant un livre
 class Book
 {
   public $id;
@@ -19,6 +22,7 @@ class Book
   }
 }
 
+// Classe pour la gestion des Logs
 class Logger
 {
   public static function log($message)
@@ -28,6 +32,8 @@ class Logger
   }
 }
 
+
+// Classe pour la gestion de la bibliothèque
 class Library
 {
   private $books;
@@ -37,6 +43,7 @@ class Library
     $this->loadBooks();
   }
 
+  // Chargement des livres depuis le fichier JSON
   private function loadBooks()
   {
     if (file_exists(BIBLIOTHEQUE)) {
@@ -47,11 +54,13 @@ class Library
     }
   }
 
+  // Sauvegarde des livres dans le fichier JSON
   private function saveBooks()
   {
     file_put_contents(BIBLIOTHEQUE, json_encode($this->books));
   }
 
+  // Ajout d'un nouveau livre dans la bibliothèque
   public function addBook(Book $book)
   {
     $this->books[] = [
@@ -64,6 +73,7 @@ class Library
     Logger::log("Ajout du livre : {$book->title}");
   }
 
+  // Modification des informations d'un livre existant
   public function updateBook($id, $title, $description, $stock)
   {
     foreach ($this->books as &$book) {
@@ -79,6 +89,7 @@ class Library
     return false;
   }
 
+  // Suppression d'un livre de la bibliothèque
   public function deleteBook($id)
   {
     foreach ($this->books as $key => $book) {
@@ -92,6 +103,7 @@ class Library
     return false;
   }
 
+  // Récupération d'un livre par son identifiant
   public function getBook($id)
   {
     foreach ($this->books as $book) {
@@ -103,6 +115,7 @@ class Library
     return null;
   }
 
+  // Récupération de tous les livres de la bibliothèque
   public function getAllBooks()
   {
     Logger::log("Affichage de tous les livres");
@@ -116,6 +129,7 @@ class Library
     Logger::log("Tri des livres par : {$column}");
   }
 
+  // Méthode de tri fusion
   private function mergeSort(&$array, $left, $right, $column)
   {
     if ($left < $right) {
@@ -163,8 +177,67 @@ class Library
       $k++;
     }
   }
+
+  // Méthode de tri rapide
+  private function quickSort(&$array, $low, $high, $column)
+  {
+    if ($low < $high) {
+      // Partitionner le tableau
+      $pivot = strtolower($array[$high][$column]);
+      $i = $low - 1;
+
+      for ($j = $low; $j < $high; $j++) {
+        if (strtolower($array[$j][$column]) <= $pivot) {
+          $i++;
+          // Échanger array[i] et array[j]
+          $temp = $array[$i];
+          $array[$i] = $array[$j];
+          $array[$j] = $temp;
+        }
+      }
+      // Échanger array[i+1] et array[high]
+      $temp = $array[$i + 1];
+      $array[$i + 1] = $array[$high];
+      $array[$high] = $temp;
+
+      $pi = $i + 1;
+
+      // Trier les sous-tableaux séparément
+      $this->quickSort($array, $low, $pi - 1, $column);
+      $this->quickSort($array, $pi + 1, $high, $column);
+    }
+  }
+
+  // Méthode de recherche binaire
+  public function binarySearch($array, $left, $right, $x, $column)
+  {
+    while ($left <= $right) {
+      $mid = $left + (int)(($right - $left) / 2);
+      $value = strtolower($array[$mid][$column]);
+
+      if ($value == strtolower($x)) {
+        return $array[$mid];
+      }
+
+      if ($value < strtolower($x)) {
+        $left = $mid + 1;
+      } else {
+        $right = $mid - 1;
+      }
+    }
+    return null;
+  }
+
+  // Recherche d'un livre avec tri rapide et recherche binaire
+  public function searchBook($column, $value)
+  {
+    $this->quickSort($this->books, 0, count($this->books) - 1, $column);
+    return $this->binarySearch($this->books, 0, count($this->books) - 1, $value, $column);
+    Logger::log("Recherche de livre avec {$column} = {$value}");
+  }
 }
 
+// Classe pour l'interface utilisateur de la bibliothèque
 class LibraryUI
 {
   private $library;
@@ -174,6 +247,7 @@ class LibraryUI
     $this->library = new Library();
   }
 
+  // Affichage du menu principal
   public function showMenu($mod = 0)
   {
     if ($mod == 0) {
@@ -189,7 +263,8 @@ class LibraryUI
     print_r("[4] : Afficher tous les livres de la bibliothèque \n");
     print_r("[5] : Afficher un livre \n");
     print_r("[6] : Trier les livres \n");
-    print_r("[7] : Consulter l'historique \n");
+    print_r("[7] : Rechercher un livre \n");
+    print_r("[8] : Consulter l'historique \n");
     print_r("[X] : Quitter \n\n");
 
     $choice = trim(fgets(STDIN));
@@ -214,6 +289,9 @@ class LibraryUI
         $this->sortBooks();
         break;
       case 7:
+        $this->searchBook();
+        break;
+      case 8:
         $this->viewHistory();
         break;
       case 'x':
@@ -226,6 +304,7 @@ class LibraryUI
     }
   }
 
+  // Création d'un nouveau livre
   private function createBook()
   {
     print_r("Début de la création du livre\n");
@@ -245,11 +324,9 @@ class LibraryUI
     $this->showMenu(1);
   }
 
+  // Modification d'un livre existant
   private function modifyBook()
   {
-    // print_r("Quel livre voulez-vous modifier ? : \n");
-    // $this->displayAllBooks(1);
-
     print_r("Entrez l'identifiant du livre : \n");
     $id = trim(fgets(STDIN));
 
@@ -274,6 +351,7 @@ class LibraryUI
     $this->showMenu(1);
   }
 
+  // Suppression d'un livre existant
   private function deleteBook()
   {
     print_r("Quel livre voulez-vous supprimer ? : \n");
@@ -290,6 +368,7 @@ class LibraryUI
     $this->showMenu(1);
   }
 
+  // Affichage de tous les livres de la bibliothèque
   private function displayAllBooks($menu = 0)
   {
 
@@ -319,6 +398,7 @@ class LibraryUI
     }
   }
 
+  // Affichage d'un livre spécifique par son identifiant
   private function displayBook()
   {
     print_r("Entrez l'identifiant du livre : \n");
@@ -335,6 +415,7 @@ class LibraryUI
     $this->showMenu(1);
   }
 
+  // Tri des livres par une colonne spécifiée
   private function sortBooks()
   {
     print_r("Veuillez choisir la colonne à trier : \n");
@@ -367,6 +448,7 @@ class LibraryUI
     $this->showMenu(1);
   }
 
+  // Consultation de l'historique des actions
   private function viewHistory()
   {
     if (file_exists(HISTORIQUE)) {
@@ -376,7 +458,60 @@ class LibraryUI
     }
     $this->showMenu(1);
   }
+
+  // Recherche d'un livre par une colonne spécifiée
+  private function searchBook()
+  {
+    print_r("Veuillez choisir la colonne pour la recherche : \n");
+    print_r("[1] : nom \n");
+    print_r("[2] : description \n");
+    print_r("[3] : disponibilité \n");
+    print_r("[4] : identifiant \n");
+
+    $choice = trim(fgets(STDIN));
+    $column = '';
+    switch ($choice) {
+      case 1:
+        $column = 'title';
+        break;
+      case 2:
+        $column = 'description';
+        break;
+      case 3:
+        $column = 'stock';
+        break;
+      case 4:
+        $column = 'id';
+        break;
+      default:
+        print_r("Numéro de colonne invalide \n");
+        $this->showMenu(1);
+        return;
+    }
+
+    print_r("Entrez la valeur à rechercher : \n");
+    $value = trim(fgets(STDIN));
+
+    if ($column == 'stock') {
+      $value = strtolower($value) == 'oui' || strtolower($value) == '1';
+    }
+
+    $result = $this->library->searchBook($column, $value);
+
+    if ($result) {
+      print_r("Livre trouvé : \n");
+      print_r("ID: " . $result['id'] . "\n");
+      print_r("Titre: " . $result['title'] . "\n");
+      print_r("Description: " . $result['description'] . "\n");
+      print_r("Disponible: " . ($result['stock'] ? "Oui" : "Non") . "\n");
+    } else {
+      print_r("Aucun livre trouvé\n");
+    }
+
+    $this->showMenu(1);
+  }
 }
 
+// Création et affichage de l'interface utilisateur de la bibliothèque
 $libraryUI = new LibraryUI();
 $libraryUI->showMenu();
