@@ -1,12 +1,14 @@
 <?php
 
-define("BIBLIOTHEQUE","Bibliotheque.json");
+## Constante permettant l'accès au fichier source ##
+define("BIBLIOTHEQUE", "Bibliotheque.json");
 
+## Fonction permettant l'affichage du menu principal de l'application ##
 function Menu($mod = 0): void
 {
     if ($mod == 0) {
         print_r("-----------------------------------------\n");
-        print_r("Bienvenu dans la bibliothèque ! \n");
+        print_r("Bienvenue dans la bibliothèque ! \n");
         print_r("-----------------------------------------\n");
     }
     
@@ -17,44 +19,49 @@ function Menu($mod = 0): void
     print_r("[3] : Supprimer un Livre \n");
     print_r("[4] : Afficher tous les livres de la bibliothèque \n");
     print_r("[5] : Afficher un Livre \n");
-    print_r("[6] : Trier les livres \n");
+    print_r("[6] : Rechercher un Livre \n");
     print_r("[X] : Quitter \n\n");
 
-    $choice = fgets(STDIN);
+    ## Récupération de l'input utilisateur ##
+    $choice = trim(fgets(STDIN));
 
-    if ($choice == 1) 
-    {
+    ## Gestion et lancement des différents scripts à partir des inputs ##
+    if ($choice === "1") {
        CreateBook();
-    }elseif ($choice == 2) {
+    } elseif ($choice === "2") {
         ModifyBook();
-    }elseif ($choice == 3) {
+    } elseif ($choice === "3") {
         DeleteBook();
-    }elseif ($choice == 4) {
+    } elseif ($choice === "4") {
         DisplayAllBook();
-    }elseif ($choice == 5) {
-        DisplayBook();
-    }elseif ($choice == 6) {
-        sortBooks();
-    }elseif ($choice == "x" || $choice == "X") {
+    } elseif ($choice === "5") {
+        # code...
+    } elseif ($choice === "6") {
+        SearchBook();
+    } elseif ($choice === "x" || $choice === "X") {
         exit;
+    } else {
+        print_r("Choix incorrect. Veuillez réessayer.\n");
+        Menu(1);
     }
 }
 
-
+## Fonction permettant de créer un livre et l'ajouter au fichier bibliothèque ##
 function CreateBook(): void
 {
     print_r("Début de la création du Livre\n");
 
-
+    ## Génération de l'id unique du livre ##
     $id = uniqid("book_", true);
 
+    ## Récupération des différents paramètres du livre ##
     print_r("Entrez le nom du livre : \n");
-    $name = fgets(STDIN);
+    $name = trim(fgets(STDIN));
     print_r("Entrez la description du livre : \n");
-    $desc = fgets(STDIN);
+    $desc = trim(fgets(STDIN));
     $stock = 0;
+    ## Appel de la fonction stock permettant la gestion de l'affichage du menu des stocks ##
     SelectStock($stock);
- 
 
     $book = [
         "id" => $id,
@@ -63,59 +70,57 @@ function CreateBook(): void
         "stock" => $stock,
     ];
 
-
-
-    $file = json_decode(file_get_contents(BIBLIOTHEQUE),true);
+    ## Récupération des données de la bibliothèque et enregistrement du nouveau livre ##
+    $file = json_decode(file_get_contents(BIBLIOTHEQUE), true);
     $file[] = $book;
-    file_put_contents(BIBLIOTHEQUE,json_encode($file));
+    file_put_contents(BIBLIOTHEQUE, json_encode($file));
 
-    print_r("Le livre a bien été créer !! \n");
+    print_r("Le livre a bien été créé !! \n");
 
     Menu(1);
-
 }
 
+## Fonction permettant de gérer le paramètre stock d'un livre avec son menu ##
 function SelectStock(&$stock)
 {
     print_r("Le livre est-il en stock : \n");
     print_r("[1] Oui | [2] Non\n");
-    $stockChoice = fgets(STDIN);
+    $stockChoice = trim(fgets(STDIN));
 
-    if ($stockChoice == 1) 
-    {
+    if ($stockChoice === "1") {
         $stock = true;
         return $stock;
-    }elseif ($stockChoice == 2) {
+    } elseif ($stockChoice === "2") {
         $stock = false;
         return $stock;
-
-    }else {
-        print_r("Choix incorecte \n");
+    } else {
+        print_r("Choix incorrect \n");
         SelectStock($stock);
-
     }
-
 }
 
+## Fonction permettant d'afficher tous les livres de la bibliothèque ##
 function DisplayAllBook($menu = 0)
 {
+    ## Récupération des données de la bibliothèque ##
     $retrieve_data = file_get_contents(BIBLIOTHEQUE);
 
-    $decoded = json_decode($retrieve_data,true);
-    if ($menu == 0 ) {
+    $decoded = json_decode($retrieve_data, true);
+    if ($menu == 0) {
         print_r("-------------------------------------\n");
         print_r("Voici les livres de la bibliothèque : \n");
         print_r("-------------------------------------\n");
     }
 
+    ## Boucle sur chacun des livres en affichant leurs paramètres id et titre ##
     foreach ($decoded as $key => $value) {
-        print_r("$key : ".$value["title"] ." (id : ".$value["id"].")\n");
+        $id = isset($value['id']) ? $value['id'] : 'N/A';
+        print_r("$key : ".$value["titre"] ." (id : ".$value["id"].")\n");
         print_r("-------------------------------------\n");
     }
 
     if ($menu == 0) {
         Menu(1);
-
     }
 }
 
@@ -230,32 +235,143 @@ function mergeSort(&$array, $left, $right, $column)
     }
 }
 
-function ModifyBook()
+function DisplayBook()
 {
+    print_r("Entrez l'identifiant du livre : \n");
+    $id = fgets(STDIN);
+
     $retrieve_data = file_get_contents(BIBLIOTHEQUE);
 
     $decoded = json_decode($retrieve_data,true);
 
+    $found = false;
+    
+
+    foreach ($decoded as $key => $value) {
+        if ($value['id'] == trim($id)) {
+            echo "Titre: " . $value['title'] . "\n";
+            echo "Description: " . $value['desc'] . "\n";
+            echo "Disponible: " . ($value['stock'] ? "Oui" : "Non") . "\n";
+            $found = true;
+        }
+    }
+
+    if (! $found) {
+        echo "Aucun livre trouvé\n";
+    }
+
+    system('cls');
+
+    Menu(1);
+}
+
+function sortBooks()
+{
+    print_r("Veuillez choisir la colonne à trier : \n");
+    print_r("[1] : nom \n");
+    print_r("[2] : description \n");
+    print_r("[3] : disponibilité \n");
+
+    $column = '';
+    $choice = trim(fgets(STDIN));
+    if ($choice == 1) {
+        $column = 'title';
+    }elseif ($choice == 2) {
+        $column = 'desc';
+    }elseif ($choice == 3) {
+        $column = 'stock';
+
+    }else {
+        print_r("Numéro de colonne invalide \n");
+        Menu(1);
+    }
+
+    $retrieve_data = file_get_contents(BIBLIOTHEQUE);
+    $decoded = json_decode($retrieve_data,true);
+
+    mergeSort($decoded, 0, count($decoded) -1, $column);
+
+    print_r($decoded);
+
+    Menu(1);
+}
+
+
+function merge(&$array, $left, $middle, $right, $column)
+{
+    $leftLength = $middle - $left +1;
+    $rightLength = $right - $middle;
+
+    $leftArray = array_slice($array, $left, $leftLength);
+    $rightArray = array_slice($array, $middle+1, $rightLength);
+
+
+    $i = 0;
+    $j = 0;
+    $k = $left;
+
+    while($i < $leftLength && $j < $rightLength) {
+        if (strcmp($leftArray[$i][$column], $rightArray[$j][$column]) <= 0) {
+            $array[$k] = $leftArray[$i];
+            $i++;
+        } else {
+            $array[$k] = $rightArray[$j];
+            $j++;
+        }
+        $k++;
+    }
+
+    while ($i < $leftLength) {
+        $array[$k] = $leftArray[$i];
+        $i++;
+        $k++;
+    }
+
+    while ($j < $rightLength) {
+        $array[$k] = $rightArray[$j];
+        $j++;
+        $k++;
+    }
+}
+
+function mergeSort(&$array, $left, $right, $column)
+{
+    if ($left < $right) {
+        $middle = $left + (int)(($right - $left) / 2);
+
+        mergeSort($array, $left, $middle, $column);
+        mergeSort($array, $middle+1, $right, $column);
+
+        merge($array, $left, $middle, $right, $column);
+    }
+}
+
+## Fonction permettant de sélectionner et modifier un livre ##
+function ModifyBook()
+{
+    ## Récupération des valeurs de la bibliothèque ##
+    $retrieve_data = file_get_contents(BIBLIOTHEQUE);
+
+    $decoded = json_decode($retrieve_data, true);
+
     print_r("-------------------------------------\n");
-    print_r("Quel livre voulez vous modifier ? : \n");
+    print_r("Quel livre voulez-vous modifier ? : \n");
     print_r("-------------------------------------\n");
     DisplayAllBook(1);
 
+    ## Récupération de l'input utilisateur ##
     $choice = trim(fgets(STDIN));
 
-    if (array_key_exists($choice,$decoded)) 
-    {
-        foreach ($decoded[$choice] as $key => $value) 
-        {
-            if ($key == "id") 
-            {
+    ## Vérification de l'existence du livre ##
+    if (array_key_exists($choice, $decoded)) {
+        foreach ($decoded[$choice] as $key => $value) {
+            ## Génération d'un nouvel id ##
+            if ($key == "id") {
                 $param = uniqid("book_", true);
-
-            }elseif($key == "stock") {
+            } elseif ($key == "stock") { ## modification du stock ##
                 $param = 0;
                 SelectStock($param);
-                
-            }else {
+            } else { ## Boucle sur les autres paramètres ##
                 print_r("Entrez le nouveau paramètre (".$key."): ");
                 $param = trim(fgets(STDIN));
             }
@@ -263,41 +379,138 @@ function ModifyBook()
             $decoded[$choice][$key] = $param;
         }
 
+        ## Enregistrement dans la bibliothèque ##
+        file_put_contents(BIBLIOTHEQUE, json_encode($decoded));
 
         file_put_contents(BIBLIOTHEQUE,json_encode($decoded));
 
         print_r("Le livre a bien été modifié !! \n");
 
         Menu(1);
-
-    }else{
-        print_r("Aucun Livre correspondant !");
+    } else {
+        print_r("Aucun Livre correspondant !\n");
+        ModifyBook();
     }
-
-
 }
 
+## Fonction permettant de supprimer un livre de la bibliothèque ##
 function DeleteBook()
 {
+    ## Récupération des données de la bibliothèque ##
     $retrieve_data = file_get_contents(BIBLIOTHEQUE);
 
-    $decoded = json_decode($retrieve_data,true);
+    $decoded = json_decode($retrieve_data, true);
 
     print_r("-------------------------------------\n");
-    print_r("Quel livre voulez vous Supprimer ? : \n");
+    print_r("Quel livre voulez-vous supprimer ? : \n");
     print_r("-------------------------------------\n");
     DisplayAllBook(1);
 
     $choice = trim(fgets(STDIN));
-    if (array_key_exists($choice,$decoded)) 
-    {
-        unset($decoded[$choice]);
-        print_r("Livre supprimer avec succès !");
-        Menu(1);
 
-    }else{
-        print_r("Aucun Livre correspondant !");
+    ## Vérification de l'existence du livre et suppression ##
+    if (array_key_exists($choice, $decoded)) {
+        unset($decoded[$choice]);
+        file_put_contents(BIBLIOTHEQUE, json_encode($decoded));
+        print_r("Livre supprimé avec succès !\n");
+        Menu(1);
+    } else {
+        print_r("Aucun Livre correspondant !\n");
         DeleteBook();
     }
 }
+
+## Fonction pour rechercher un livre ##
+function SearchBook(): void
+{
+    $books = json_decode(file_get_contents(BIBLIOTHEQUE), true);
+
+    print_r("Choisissez la colonne pour la recherche :\n");
+    print_r("[1] : Nom\n");
+    print_r("[2] : Description\n");
+    print_r("[3] : Stock\n");
+    print_r("[4] : ID\n");
+
+    $columnChoice = trim(fgets(STDIN));
+    $column = "";
+    switch ($columnChoice) {
+        case "1":
+            $column = "titre";
+            break;
+        case "2":
+            $column = "desc";
+            break;
+        case "3":
+            $column = "stock";
+            break;
+        case "4":
+            $column = "id";
+            break;
+        default:
+            print_r("Choix incorrect. Veuillez réessayer...\n");
+            SearchBook();  // Call SearchBook again to prompt the user for correct input
+            return;
+    }
+
+    print_r("Entrez la valeur à rechercher :\n");
+    $value = trim(fgets(STDIN));
+
+    foreach ($books as $book) {
+        if (isset($book[$column]) && $book[$column] == $value) {
+            print_r("Livre trouvé :\n");
+            print_r("ID: " . $book['id'] . "\n");
+            print_r("Titre: " . $book['titre'] . "\n");
+            print_r("Description: " . (isset($book['desc']) ? $book['desc'] : "N/A") . "\n");
+            print_r("Stock: " . (isset($book['stock']) && $book['stock'] > 0 ? "Oui" : "Non") . "\n");
+            break;
+        }
+    }
+    Menu(1);  // Call Menu again to continue interaction
+}
+
 Menu();
+
+## Fonction de recherche binaire ##
+function binarySearch($array, $column, $value)
+{
+    $low = 0;
+    $high = count($array) - 1;
+
+    while ($low <= $high) {
+        $mid = intdiv($low + $high, 2);
+        if ($array[$mid][$column] < $value) {
+            $low = $mid + 1;
+        } elseif ($array[$mid][$column] > $value) {
+            $high = $mid - 1;
+        } else {
+            return $mid;
+        }
+    }
+    return -1;
+}
+
+## Fonction de tri rapide ##
+function quickSort($array, $column)
+{
+    if (count($array) < 2) {
+        return $array;
+    }
+    
+    $left = $right = [];
+    reset($array);
+    $pivot_key = key($array);
+    $pivot = array_shift($array);
+    
+    foreach ($array as $k => $v) {
+        if ($v[$column] < $pivot[$column]) {
+            $left[$k] = $v;
+        } else {
+            $right[$k] = $v;
+        }
+    }
+    
+    return array_merge(quickSort($left, $column), [$pivot_key => $pivot], quickSort($right, $column));
+}
+
+Menu();
+?>
