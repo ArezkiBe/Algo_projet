@@ -15,8 +15,9 @@ function Menu($mod = 0): void
     print_r("[1] : Créer un Livre \n");
     print_r("[2] : Modifier un Livre \n");
     print_r("[3] : Supprimer un Livre \n");
-    print_r("[4] : Afficher tout les livres de la bibliothèque \n");
+    print_r("[4] : Afficher tous les livres de la bibliothèque \n");
     print_r("[5] : Afficher un Livre \n");
+    print_r("[6] : Trier les livres \n");
     print_r("[X] : Quitter \n\n");
 
     $choice = fgets(STDIN);
@@ -31,7 +32,9 @@ function Menu($mod = 0): void
     }elseif ($choice == 4) {
         DisplayAllBook();
     }elseif ($choice == 5) {
-        # code...
+        DisplayBook();
+    }elseif ($choice == 6) {
+        sortBooks();
     }elseif ($choice == "x" || $choice == "X") {
         exit;
     }
@@ -55,7 +58,7 @@ function CreateBook(): void
 
     $book = [
         "id" => $id,
-        "titre" => trim($name),
+        "title" => trim($name),
         "desc" => trim($desc),
         "stock" => $stock,
     ];
@@ -106,13 +109,14 @@ function DisplayAllBook($menu = 0)
     }
 
     foreach ($decoded as $key => $value) {
-        print_r("$key : ".$value["titre"] ." (id : ".$value["id"].")\n");
+        print_r("$key : ".$value["title"] ." (id : ".$value["id"].")\n");
         print_r("-------------------------------------\n");
     }
 
     if ($menu == 0) {
         Menu(1);
 
+    }
 }
 
 function DisplayBook()
@@ -129,7 +133,7 @@ function DisplayBook()
 
     foreach ($decoded as $key => $value) {
         if ($value['id'] == trim($id)) {
-            echo "Titre: " . $value['titre'] . "\n";
+            echo "Titre: " . $value['title'] . "\n";
             echo "Description: " . $value['desc'] . "\n";
             echo "Disponible: " . ($value['stock'] ? "Oui" : "Non") . "\n";
             $found = true;
@@ -147,16 +151,37 @@ function DisplayBook()
 
 function sortBooks()
 {
-    $retrieve_data = file_get_contents(BIBLIOTHEQUE);
+    print_r("Veuillez choisir la colonne à trier : \n");
+    print_r("[1] : nom \n");
+    print_r("[2] : description \n");
+    print_r("[3] : disponibilité \n");
 
+    $column = '';
+    $choice = trim(fgets(STDIN));
+    if ($choice == 1) {
+        $column = 'title';
+    }elseif ($choice == 2) {
+        $column = 'desc';
+    }elseif ($choice == 3) {
+        $column = 'stock';
+
+    }else {
+        print_r("Numéro de colonne invalide \n");
+        Menu(1);
+    }
+
+    $retrieve_data = file_get_contents(BIBLIOTHEQUE);
     $decoded = json_decode($retrieve_data,true);
 
-    mergeSort($decoded, 0, count($decoded) -1);
+    mergeSort($decoded, 0, count($decoded) -1, $column);
 
     print_r($decoded);
+
+    Menu(1);
 }
 
-function merge(&$array, $left, $middle, $right)
+
+function merge(&$array, $left, $middle, $right, $column)
 {
     $leftLength = $middle - $left +1;
     $rightLength = $right - $middle;
@@ -170,7 +195,7 @@ function merge(&$array, $left, $middle, $right)
     $k = $left;
 
     while($i < $leftLength && $j < $rightLength) {
-        if (strcmp($leftArray[$i]['titre'], $rightArray[$j]['titre']) <= 0) {
+        if (strcmp($leftArray[$i][$column], $rightArray[$j][$column]) <= 0) {
             $array[$k] = $leftArray[$i];
             $i++;
         } else {
@@ -186,26 +211,23 @@ function merge(&$array, $left, $middle, $right)
         $k++;
     }
 
-    while ($j < $leftLength) {
+    while ($j < $rightLength) {
         $array[$k] = $rightArray[$j];
         $j++;
         $k++;
     }
 }
 
-function mergeSort($array, $left, $right)
+function mergeSort(&$array, $left, $right, $column)
 {
     if ($left < $right) {
-        $middle = $left + (int)(($right + $left) / 2);
-        //echo $middle;
+        $middle = $left + (int)(($right - $left) / 2);
 
-        mergeSort($array, $left, $middle);
-        mergeSort($array, $middle+1, $right);
+        mergeSort($array, $left, $middle, $column);
+        mergeSort($array, $middle+1, $right, $column);
 
-        merge($array, $left, $middle, $right);
+        merge($array, $left, $middle, $right, $column);
     }
-}
-
 }
 
 function ModifyBook()
@@ -244,7 +266,7 @@ function ModifyBook()
 
         file_put_contents(BIBLIOTHEQUE,json_encode($decoded));
 
-        print_r("Le livre a bien été créer !! \n");
+        print_r("Le livre a bien été modifié !! \n");
 
         Menu(1);
 
